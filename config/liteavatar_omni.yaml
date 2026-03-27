@@ -1,0 +1,54 @@
+default:
+  logger:
+    log_level: "INFO"
+  service:
+    host: "0.0.0.0"
+    port: 8282
+    cert_file: "ssl_certs/localhost.crt"
+    cert_key: "ssl_certs/localhost.key"
+  chat_engine:
+    model_root: "models"
+    concurrent_limit: 1
+    handler_search_path:
+      - "src/handlers"
+    handler_configs:
+      RtcClient:
+        module: client/rtc_client/client_handler_rtc
+        connection_ttl: 900
+        turn_config:
+          turn_provider: "turn_server"
+          urls: ["stun:stun.cloudflare.com:3478","turn:turn.cloudflare.com:3478?transport=udp","turn:turn.cloudflare.com:3478?transport=tcp","turns:turn.cloudflare.com:5349?transport=tcp"]
+          username: "g04c7a7ab158c96844be7a37d9950dbf95018f36bf446944103f2830278a09c1"
+          credential: "2359bfb0ca3fb97af98aaa3b146982bef3d25978716b83932cc48c7106fd9b60"
+      SileroVad:
+        module: vad/silerovad/vad_handler_silero
+        speaking_threshold: 0.5
+        start_delay: 2048
+        end_delay: 5000
+        buffer_look_back: 5000
+        speech_padding: 512
+      SenseVoice:
+        enabled: True
+        module: asr/sensevoice/asr_handler_sensevoice
+        model_name: "iic/SenseVoiceSmall"
+      QwenOmni:
+        enabled: true
+        module: llm/qwen_omni/llm_handler_qwen_omni
+        model_name: "qwen3-omni-flash-realtime"
+        # api_key: "" # default=os.getenv("DASHSCOPE_API_KEY") api_key可以通过此处设置，或者通过环境变量，没设必挂
+        voice: "Kiki" #"Chelsie", "Serena", "Ethan", "Cherry"
+        enable_video_input: false
+        # video_frame_interval_ms: 1000 # 每1000ms发送一帧图片，防止拥塞，可按需调整，根据omni的文档，不要低于500ms
+        enable_text_output: true
+        input_audio_format: "PCM_16000HZ_MONO_16BIT"
+        output_audio_format: "PCM_24000HZ_MONO_16BIT"
+        enable_turn_detection: false # 目前暂未支持服务端vad模式，此处默认为false，不要修改
+        enable_input_transcription: false # 手动模式下，omni的输入的语音识别效果非常差，几乎不可用，默认关闭，直接使用正常asr的结果
+        transcription_model: "gummy-realtime-v1"
+      LiteAvatar:
+        module: avatar/liteavatar/avatar_handler_liteavatar
+        avatar_name: 20250408/sample_data
+        fps: 25
+        debug: false
+        enable_fast_mode: false
+        use_gpu: true

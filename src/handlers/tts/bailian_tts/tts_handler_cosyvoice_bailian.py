@@ -141,8 +141,17 @@ class HandlerTTS(HandlerBase, ABC):
                 context.input_text = ''
         except Exception as e:
             logger.error(e)
-            context.synthesizer.streaming_complete()
+            try:
+                context.synthesizer.streaming_complete()
+            except Exception as e2:
+                logger.warning(f"streaming_complete also failed: {e2}")
             context.synthesizer = None
+            # Send end-of-speech signal so downstream doesn't hang
+            output = DataBundle(output_definition)
+            output.set_main_data(np.zeros(shape=(1, 240), dtype=np.float32))
+            output.add_meta("avatar_speech_end", True)
+            output.add_meta("speech_id", speech_id)
+            context.submit_data(output)
 
     def destroy_context(self, context: HandlerContext):
         context = cast(TTSContext, context)

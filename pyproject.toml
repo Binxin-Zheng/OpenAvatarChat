@@ -69,3 +69,5 @@ no-build-isolation-package = ["chumpy"]
 
 [tool.uv.extra-build-dependencies]
 chumpy = ["wheel"]
+openai-whisper = ["setuptools<75"]
+mmcv = ["setuptools<75"]

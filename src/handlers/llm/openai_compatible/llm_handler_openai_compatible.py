@@ -139,7 +139,8 @@ class HandlerLLM(HandlerBase, ABC):
                     context.system_prompt,
                 ] + current_content,
                 stream=True,
-                stream_options={"include_usage": True}
+                stream_options={"include_usage": True},
+                enable_thinking=False
             )
             context.current_image = None
             context.input_texts = ''
