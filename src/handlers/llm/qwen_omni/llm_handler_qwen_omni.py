@@ -21,6 +21,7 @@ from chat_engine.contexts.session_context import SessionContext
 from chat_engine.data_models.chat_data.chat_data_model import ChatData
 from chat_engine.data_models.chat_engine_config_data import ChatEngineConfigModel, HandlerBaseConfigModel
 from chat_engine.data_models.runtime_data.data_bundle import DataBundle, DataBundleDefinition, DataBundleEntry
+from engine_utils.directory_info import DirectoryInfo
 
 
 class QwenOmniConfig(HandlerBaseConfigModel, BaseModel):
@@ -35,6 +36,7 @@ class QwenOmniConfig(HandlerBaseConfigModel, BaseModel):
     enable_input_transcription: bool = Field(default=False)  # Control input audio transcription
     transcription_model: str = Field(default="gummy-realtime-v1")  # Model for audio transcription
     video_frame_interval_ms: int = Field(default=1000, ge=500)  # Video frame sending interval in milliseconds
+    system_prompt_file: Optional[str] = Field(default=None)  # Path to a file containing system prompt (instructions)
 
 
 
@@ -538,8 +540,20 @@ class HandlerSeq2SeqQwenOmni(HandlerBase, ABC):
                 error_message = 'DASHSCOPE_API_KEY is required for Qwen-Omni handler'
                 logger.error(error_message)
                 raise ValueError(error_message)
-            
+
             dashscope.api_key = handler_config.api_key
+
+            self._system_prompt = None
+            if handler_config.system_prompt_file:
+                prompt_path = handler_config.system_prompt_file
+                if not os.path.isabs(prompt_path):
+                    prompt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), prompt_path)
+                    if not os.path.isfile(prompt_path):
+                        prompt_path = os.path.join(DirectoryInfo.get_project_dir(), handler_config.system_prompt_file)
+                with open(prompt_path, 'r', encoding='utf-8') as f:
+                    self._system_prompt = f.read().strip()
+                logger.info(f"Loaded system prompt from {prompt_path}")
+
             logger.info("Qwen-Omni handler loaded successfully")
 
     def create_context(self, session_context: SessionContext,
@@ -891,7 +905,7 @@ class HandlerSeq2SeqQwenOmni(HandlerBase, ABC):
             # Commit audio and create response
             context.conversation.commit()
             try:
-                context.conversation.create_response()
+                context.conversation.create_response(instructions=self._system_prompt)
                 context.is_processing = True  # Set only after successful response creation
             except Exception as e:
                 logger.opt(exception=True).error(f"Failed to create response: {e}")

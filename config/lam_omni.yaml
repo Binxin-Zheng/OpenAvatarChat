@@ -14,7 +14,7 @@ default:
     handler_configs:
       LamClient:
         module: client/h5_rendering_client/client_handler_lam
-        asset_path: "lam_samples/barbara.zip"
+        asset_path: "lam_samples/selfie.zip"
         # max time a session will last for
         connection_ttl: 900
         turn_config:
@@ -37,8 +37,9 @@ default:
         enabled: true
         module: llm/qwen_omni/llm_handler_qwen_omni
         model_name: "qwen3-omni-flash-realtime"
+        system_prompt_file: "config/prompts/qwen_omni_system.txt"
         # api_key: "" # default=os.getenv("DASHSCOPE_API_KEY") api_key可以通过此处设置，或者通过环境变量，没设必挂
-        voice: "Kiki" #"Chelsie", "Serena", "Ethan", "Cherry"
+        voice: "Rocky" #"Chelsie", "Serena", "Ethan", "Cherry"
         enable_video_input: false
         # video_frame_interval_ms: 1000 # 每1000ms发送一帧图片，防止拥塞，可按需调整，根据omni的文档，不要低于500ms
         enable_text_output: true
