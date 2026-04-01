@@ -96,6 +96,8 @@ class LamClientSessionDelegate(RtcClientSessionDelegate):
 
 class ClientLamConfigModel(ClientRtcConfigModel, BaseModel):
     asset_path: Optional[str] = Field(default=None)
+    classroom_mode: bool = Field(default=False)
+    classroom_bg: Optional[str] = Field(default=None)
 
 
 class ClientLamContext(ClientRtcContext):
@@ -163,7 +165,14 @@ class ClientHandlerLam(ClientHandlerRtc):
             logger.info(f"Return lam asset file: {file_path}")
             response = FileResponse(file_path)
             return response
-        
+
+        # Serve classroom background image
+        classroom_bg_path = self._resolve_classroom_bg()
+        if classroom_bg_path:
+            @app.get("/openavatarchat/classroom-bg")
+            async def get_classroom_bg():
+                return FileResponse(classroom_bg_path)
+
         avatar_config = {
             "avatar_type": 'lam',
             "avatar_ws_route": motion_data_route,
@@ -175,7 +184,26 @@ class ClientHandlerLam(ClientHandlerRtc):
             parent_block=parent_block,
             fastapi=app,
             avatar_config=avatar_config,
+            classroom_mode=self.handler_config.classroom_mode,
         )
+
+    def _resolve_classroom_bg(self) -> Optional[str]:
+        bg_path = self.handler_config.classroom_bg
+        if not bg_path:
+            return None
+        candidate_paths = []
+        if os.path.isabs(bg_path):
+            candidate_paths.append(bg_path)
+        else:
+            candidate_paths.append(os.path.abspath(bg_path))
+            candidate_paths.append(os.path.join(self.handler_root, bg_path))
+            candidate_paths.append(os.path.join(DirectoryInfo.get_project_dir(), bg_path))
+        for p in candidate_paths:
+            if os.path.isfile(p):
+                logger.info(f"Classroom background found: {p}")
+                return p
+        logger.warning(f"Classroom background not found: {bg_path}")
+        return None
 
     def create_context(self, session_context: SessionContext,
                        handler_config: Optional[HandlerBaseConfigModel] = None) -> HandlerContext:

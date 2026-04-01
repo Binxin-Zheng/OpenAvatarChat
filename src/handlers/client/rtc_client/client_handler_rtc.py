@@ -386,7 +386,7 @@ class ClientHandlerRtc(ClientHandlerBase):
         self.handler_config = cast(ClientRtcConfigModel, handler_config)
         self.prepare_rtc_definitions()
 
-    def setup_rtc_ui(self, ui, parent_block, fastapi: FastAPI, avatar_config):
+    def setup_rtc_ui(self, ui, parent_block, fastapi: FastAPI, avatar_config, classroom_mode: bool = False):
         turn_entity = RTCProvider().prepare_rtc_configuration(self.handler_config.turn_config)
         if turn_entity is None:
             turn_entity = RTCProvider().prepare_rtc_configuration(self.engine_config.turn_config)
@@ -406,6 +406,7 @@ class ClientHandlerRtc(ClientHandlerBase):
             config = {
                 "avatar_config": avatar_config,
                 "rtc_configuration": turn_entity.rtc_configuration if turn_entity is not None else None,
+                "classroom_mode": classroom_mode,
             }
             return JSONResponse(status_code=200, content=config)
 

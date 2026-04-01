@@ -17,6 +17,9 @@ default:
         asset_path: "lam_samples/selfie.zip"
         # max time a session will last for
         connection_ttl: 900
+        # Classroom mode: display 16:9 layout with blackboard
+        classroom_mode: true
+        classroom_bg: "config/assets/classroom_bg.png" # provide your own background image
         turn_config:
           turn_provider: "turn_server"
           urls: ["stun:stun.cloudflare.com:3478","turn:turn.cloudflare.com:3478?transport=udp","turn:turn.cloudflare.com:3478?transport=tcp","turns:turn.cloudflare.com:5349?transport=tcp"]
